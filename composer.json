@@ -1,5 +1,5 @@
 {
-  "name" : "cost/cost-acl-navigation",
+  "name" : "costsrl/cost-acl-navigation",
   "description": "Navigation based on Laminas ",
   "require" : {
     "php": ">=7.0"
@@ -12,7 +12,7 @@
       "CostAclNavigation\\" : "src/"
     }
   },
-  "type" : "MODULE ZF3",
+  "type" : "library",
   "homepage" : "http://www.cost.it",
   "authors" : [{
     "name" : "Renato Salvatori",
