@@ -1,0 +1,202 @@
+        <!--
+        <ul class="navbar-nav">
+            <li class="nav-item"> <a class="nav-link" href="#"> First level 1 </a> </li>
+            <li class="nav-item"> <a class="nav-link" href="#"> First level 2 </a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">  First level 3  </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"> Second level 1 </a></li>
+                    <li><a class="dropdown-item" href="#"> Second level 2 &raquo </a>
+                        <ul class="submenu dropdown-menu">
+                            <li><a class="dropdown-item" href=""> Third level 1</a></li>
+                            <li><a class="dropdown-item" href=""> Third level 2</a></li>
+                            <li><a class="dropdown-item" href=""> Third level 3 &raquo </a>
+                                <ul class="submenu dropdown-menu">
+                                    <li><a class="dropdown-item" href=""> Fourth level 1</a></li>
+                                    <li><a class="dropdown-item" href=""> Fourth level 2</a></li>
+                                </ul>
+                            </li>
+                            <li><a class="dropdown-item" href=""> Second level  4</a></li>
+                            <li><a class="dropdown-item" href=""> Second level  5</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="dropdown-item" href="#"> Dropdown item 3 </a></li>
+                    <li><a class="dropdown-item" href="#"> Dropdown item 4 </a>
+                </ul>
+            </li>
+            <li class="nav-item"> <a class="nav-link" href="#"> First level 1 </a> </li>
+            <li class="nav-item"> <a class="nav-link" href="#"> First level 2 </a></li>
+        </ul>
+        -->
+
+    <ul class="navbar-nav">
+        <?php
+        $navHelper = $this->navigation('navigation_default');
+        $containers = $navHelper->getContainer();
+        $acl = $navHelper->getAcl();
+        $role = $navHelper->getRole();
+        $pattern = '/<a href=\"([^\"]*)\">(.*)<\/a>/iU';
+        // var_dump($containers->getPages());
+        foreach ($containers->getPages() as $page) {
+            if (! $navHelper->accept($page))
+                continue;
+            $class = "";
+            if ($page->isActive() && $navHelper->accept($page)) {
+                $class = "active";
+            }
+
+            if (count($page)) {
+                // if there are subpages we render the menu a bit different
+                $label = $page->getLabel();
+                $label = $this->translate($label); // translated label
+                $label = $this->escapehtml($label); // sanitized label
+                printf('<li class="nav-item dropdown %s">' . "\n", ($class ? ' ' . $class : ''));
+
+                $icon = $page->get('icon');
+                $iconRender = '';
+                if ($icon != '') {
+                    $label = sprintf('<span class="%s"></span>', $page->get('icon')) . ' ' . $label;
+                }
+
+                printf('    <a href="%s" class="nav-link dropdown-toggle" data-toggle="dropdown">%s<b class="caret"></b></a>' . "\n", $page->getHref(), $label);
+                echo '<ul class="dropdown-menu" role="menu">' . "\n";
+                foreach ($page as $secondLevel) {
+                    if (count($secondLevel)) {
+                        $label = $page->getLabel();
+                        $label = $this->translate($label); // translated label
+                        $label = $this->escapehtml($label); // sanitized label
+                        printf('<li class="nav-item dropdown %s">' . "\n", ($class ? ' ' . $class : ''));
+
+                        $icon = $page->get('icon');
+                        $iconRender = '';
+                        if ($icon != '') {
+                            $label = sprintf('<span class="%s"></span>', $page->get('icon')) . ' ' . $label;
+                        }
+
+                        printf('    <a href="%s" class="nav-link dropdown-toggle" data-toggle="dropdown">%s<b class="caret"></b></a>' . "\n", $page->getHref(), $label);
+                        echo '<ul class="submenu dropdown-menu" role="menu">' . "\n";
+                        foreach ($secondLevel as $thirdLevel) {
+                            if (! $navHelper->accept($thirdLevel)) {
+                                continue;
+                            }
+                            $renderPage = $navHelper->htmlify($thirdLevel, false);
+
+                            $icon = $thirdLevel->get('icon');
+                            $iconRender = '';
+                            if ($icon != '') {
+                                $iconRender = sprintf('<span class="%s"></span>', $page->get('icon'));
+                                $renderPage = preg_replace($pattern, '<a href="${1}">' . $iconRender . ' $2</a>', $renderPage);
+                            }
+                            printf("<li class='dropdown-item'>%s</li>\n", urldecode($renderPage));
+                        }
+
+                    }
+                    else{
+                        if (! $navHelper->accept($secondLevel)) {
+                            continue;
+                        }
+                        $renderPage = $navHelper->htmlify($secondLevel, false);
+
+                        $icon = $secondLevel->get('icon');
+                        $iconRender = '';
+                        if ($icon != '') {
+                            $iconRender = sprintf('<span class="%s"></span>', $page->get('icon'));
+                            $renderPage = preg_replace($pattern, '<a href="${1}">' . $iconRender . ' $2</a>', $renderPage);
+                        }
+                        printf("<li class='dropdown-item'>%s</li>\n", urldecode($renderPage));
+                    }
+
+                }
+                echo "</ul></li>\n";
+            } else {
+                $page->setClass("nav-link");
+                $renderPage = $navHelper->htmlify($page,true,true);
+                $icon = $page->get('icon');
+                $iconRender = '';
+                if ($icon != '') {
+                    $iconRender = sprintf('<span class="%s"></span>', $page->get('icon'));
+                    $renderPage = preg_replace($pattern, '<a class=\"nav-link\" href="${1}">' . $iconRender . ' $2</a>', $renderPage);
+                }
+                printf("<li class=\"nav-item  menu %s\">%s</li>\n", $class, $renderPage);
+            }
+        }
+        ?>
+    </ul>
+<style>
+
+    @media (min-width: 992px){
+        .dropdown-menu .dropdown-toggle:after{
+            border-top: .3em solid transparent;
+            border-right: 0;
+            border-bottom: .3em solid transparent;
+            border-left: .3em solid;
+        }
+        .dropdown-menu .dropdown-menu{
+            margin-left:0; margin-right: 0;
+        }
+        .dropdown-menu li{
+            position: relative;
+        }
+        .nav-item .submenu{
+            display: none;
+            position: absolute;
+            left:100%; top:-7px;
+            background-color: #ffc107;
+        }
+        .nav-item .submenu-left{
+            right:100%; left:auto;
+        }
+        .dropdown-menu > li:hover{ background-color: #f1f1f1 }
+        .dropdown-menu > li:hover > .submenu{
+            display: block;
+        }
+    }
+
+    @media (max-width: 680px){
+        .dropdown-menu .dropdown-toggle:after{
+            border-top: .3em solid transparent;
+            border-right: 0;
+            border-bottom: .3em solid transparent;
+            border-left: .3em solid;
+        }
+        .dropdown-menu .dropdown-menu{
+            margin-left:0; margin-right: 0;
+        }
+        .dropdown-menu li{
+            position: relative;
+            background-color: #dae0e5;
+        }
+        .nav-item .submenu{
+            display: none;
+            position: absolute;
+            left:100%; top:-7px;
+        }
+        .nav-item .submenu-left{
+            right:100%; left:auto;
+        }
+        .dropdown-menu > li:hover{ background-color: #f1f1f1 }
+        .dropdown-menu > li:hover > .submenu{
+            display: block;
+        }
+    }
+
+</style>
+
+<script>
+    $(document).on('click', '.dropdown-menu', function (e) {
+        e.stopPropagation();
+    });
+
+    // make it as accordion for smaller screens
+    if ($(window).width() < 992) {
+        $('.dropdown-menu a').click(function(e){
+            e.preventDefault();
+            if($(this).next('.submenu').length){
+                $(this).next('.submenu').toggle();
+            }
+            $('.dropdown').on('hide.bs.dropdown', function () {
+                $(this).find('.submenu').hide();
+            })
+        });
+    }
+</script>

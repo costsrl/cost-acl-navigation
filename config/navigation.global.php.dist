@@ -1,0 +1,40 @@
+<?php
+return array(
+     'navigation' => array(
+         'default' => array(
+             array(
+                 'label' => 'Home',
+                 'route' => 'home',
+             ),
+			 array(
+                 'label' => 'Application',
+                 'route' => 'application', 
+				 'controller' => 'Index',
+				 'action'     => 'index',			
+             ),
+              array(
+                 'label' => 'Foo',
+                 'route' => 'application', 
+				 'controller' => 'Index',
+				 'action'     => 'foo',			
+             ),
+              array(
+                 'label' => 'Bar',
+                 'route' => 'application', 
+				 'controller' => 'Index',
+				 'action'     => 'bar',			
+             ),
+			array(
+				'label' => 'Laminas',
+				'uri'   => 'http://framework.Laminas.com/',
+				'resource' => 'Laminas',
+				'privilege'	=>	'uri'
+			),
+		),
+     ),
+     'service_manager' => array(
+         'factories' => array(
+             'navigation' => 'Laminas\Navigation\Service\DefaultNavigationFactory',
+         ),
+     ),
+);

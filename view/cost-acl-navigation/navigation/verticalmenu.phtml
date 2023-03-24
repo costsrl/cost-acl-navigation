@@ -1,0 +1,115 @@
+<?php
+$startMenu = <<<EOF
+<nav id="mp-menu" class="mp-menu">
+	<div class="mp-level">
+		<h2 class="icon icon-world">Menu Operativi</h2>
+		<ul>
+EOF;
+
+$endMenu = <<<EOF
+        </ul>
+    </div>
+</nav>    
+EOF;
+$navHelper = $this->navigation('navigation_default');
+$containers = $navHelper->getContainer();
+$acl = $navHelper->getAcl();
+$role = $navHelper->getRole();
+$pattern ='/<a href=\"([^\"]*)\">(.*)<\/a>/iU';
+$menuHtml ='';
+
+if(!function_exists('renderSubMenu')){
+    function renderSubMenu(&$render,$navHelper,&$page){
+        $menuHtml = '';
+        
+        if(!$navHelper->accept($page)) {
+            return $menuHtml;
+        }
+        
+        
+        $label  = $page->getLabel();
+        //$label  = $render->translate($label); // translated label
+        $label  = $render->escapehtml($label); // sanitized label
+        $menuHtml.=sprintf('<li class="icon icon-arrow-left %s">'."\n",($class?' '.$class:''));
+        
+        $class = $page->get('class');
+        $icon  = $page->get('icon');
+        $iconRender='';
+        if($icon !=''){
+            //$label= sprintf('<span class="%s"></span>',$page->get('icon')).' '.$label;
+        }
+        
+        
+        if($class != ''){
+            $tokenClass = explode('-', $class);
+            $subClassNode = "icon ico-h2-{$tokenClass[1]}";
+        }
+         
+        $menuHtml.=sprintf('<a href="%s" class="%s" >%s</a>'."\n",$page->getHref(),$class,$label);
+        $menuHtml.=sprintf('<div class="mp-level"><h2 class="%s">%s</h2>'."\n",$subClassNode,$label);
+        $menuHtml.="<ul>\n";
+        foreach($page as $subPage){
+            if(count($subPage)) {
+                $menuHtml.= renderSubMenu($render,$navHelper,$subPage);
+            }
+            
+            if(!$navHelper->accept($subPage)) {
+                continue;
+            }
+            
+            if((int) $subPage->get('isCustomPage') > 0)
+                continue;
+             
+            
+            $renderPage = $navHelper->htmlify($subPage,false);
+            $icon = $subPage->get('icon');
+            $iconRender='';
+            if($icon !=''){
+                //$iconRender= sprintf('<span class="%s"></span>',$page->get('icon'));
+                //$renderPage = preg_replace($pattern,'<a href="${1}">'.$iconRender.' $2</a>',$renderPage);
+            }
+            $menuHtml.=sprintf("<li class='freccia'>%s</li>\n",urldecode($renderPage));
+            // /it_IT/anagrafica/lista%3Frol=3
+            //printf("<li>%s</li>\n",urldecode('<a href="/it_IT/anagrafica/lista%3Frol=3">xxx</a>'));
+        }
+        $menuHtml.="</ul>\n</li>\n";
+        return $menuHtml;
+    }
+}
+
+
+foreach($containers->getPages() as $page) {
+    if(! $navHelper->accept($page))
+        continue;
+    
+    if((int) $page->get('isCustomPage')==1)
+        continue;
+        
+    $class = "";
+    if ($page->isActive() && $navHelper->accept($page)) {      
+        $class = "active";
+    }
+    if(count($page)) {
+        $menuHtml.= renderSubMenu($this,$navHelper,$page);
+    }
+    else{
+        $renderPage = $navHelper->htmlify($page);
+        $icon  = $page->get('icon');
+        $class = ($page->get('class') !='') ? $page->get('class') : "ico-1liv";  //gestione menu verticale
+        $iconRender='';
+        if($icon !=''){
+            $iconRender= sprintf('<span class="%s"></span>',$page->get('icon'));
+            $renderPage = preg_replace($pattern,'<a href="${1}" class="ico-1liv">'.$iconRender.' $2</a>',$renderPage);           
+        }
+        //$class="ico-1liv";
+        $menuHtml.=sprintf("<li class=\"%s\">%s</li>\n",$class,$renderPage);  
+    }
+}
+
+$menu = $startMenu;
+$menu.= $menuHtml;
+$menu.= $endMenu;
+echo $menu;
+
+?>	
+	
